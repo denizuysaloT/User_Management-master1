@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>User List</h1>
+    <div class="controls">
+        <button id="add-user-btn" onclick="openAddUserPopup()">+ New User</button>
+        <input type="checkbox" id="hide-disabled-checkbox" {{ 'checked' if hide_disabled else '' }} onchange="toggleHideDisabled()"> Hide Disabled User
+    </div>
+    <div class="container">
+        <div class="user-list">
+            <div class="table-container">
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>ID
+                                <img src="{{ url_for('static', filename='icons/sorting.png') }}" class="icon sort-icon" onclick="sortTable('id')">
+                                <img src="{{ url_for('static', filename='icons/filter.png') }}" class="icon filter-icon" onclick="openFilterPopup('id')">
+                            </th>
+                            <th>Username
+                                <img src="{{ url_for('static', filename='icons/sorting.png') }}" class="icon sort-icon" onclick="sortTable('username')">
+                                <img src="{{ url_for('static', filename='icons/filter.png') }}" class="icon filter-icon" onclick="openFilterPopup('username')">
+                            </th>
+                            <th>Email
+                                <img src="{{ url_for('static', filename='icons/sorting.png') }}" class="icon sort-icon" onclick="sortTable('email')">
+                                <img src="{{ url_for('static', filename='icons/filter.png') }}" class="icon filter-icon" onclick="openFilterPopup('email')">
+                            </th>
+                            <th>Enabled
+                                <img src="{{ url_for('static', filename='icons/sorting.png') }}" class="icon sort-icon" onclick="sortTable('enabled')">
+                                <img src="{{ url_for('static', filename='icons/filter.png') }}" class="icon filter-icon" onclick="openFilterPopup('enabled')">
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ 'Yes' if user.enabled else 'No' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add New User Popup -->
+        <div id="add-user-popup" class="popup">
+            <div class="popup-content">
+                <span class="close" onclick="closeAddUserPopup()">&times;</span>
+                <h2>Add New User</h2>
+                <form action="/add_user" method="POST">
+                    <label for="user_role">User Role:</label>
+                    <select id="user_role" name="user_role" required onchange="updateUsername()">
+                        <option value="">Select a role</option>
+                        <option value="admin">Admin</option>
+                        <option value="super_admin">Super Admin</option>
+                        <option value="guest">Guest</option>
+                    </select><br><br>
+
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" placeholder="Username will be set based on role" readonly><br><br>
+
+                    <label for="display_name">Display Name:</label>
+                    <input type="text" id="display_name" name="display_name" placeholder="Enter display name"><br><br>
+
+                    <label for="phone">Phone:</label>
+                    <input type="text" id="phone" name="phone" placeholder="05xx-xxx-xxx" pattern="\d{11}" title="Phone number should be in the format: 123-456-7890" required>
+
+
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required><br><br>
+
+                    <label for="enabled">Enabled:</label>
+                    <input type="checkbox" id="enabled" name="enabled"><br><br>
+
+                    <input type="submit" value="Add User">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Popup -->
+    <div id="filter-popup" class="popup">
+        <div class="popup-content">
+            <span class="close" onclick="closeFilterPopup()">&times;</span>
+            <h2>Filter</h2>
+            <form id="filter-form" method="GET" action="/">
+                <label for="filter_id">ID:</label>
+                <input type="text" id="filter_id" name="filter_id" value="{{ request.args.get('filter_id', '') }}"><br><br>
+
+                <label for="filter_username">Username:</label>
+                <input type="text" id="filter_username" name="filter_username" value="{{ request.args.get('filter_username', '') }}"><br><br>
+
+                <label for="filter_email">Email:</label>
+                <input type="text" id="filter_email" name="filter_email" value="{{ request.args.get('filter_email', '') }}"><br><br>
+
+                <label for="filter_enabled">Enabled:</label>
+                <select id="filter_enabled" name="filter_enabled">
+                    <option value="">Any</option>
+                    <option value="True" {{ 'selected' if request.args.get('filter_enabled') == 'True' else '' }}>Yes</option>
+                    <option value="False" {{ 'selected' if request.args.get('filter_enabled') == 'False' else '' }}>No</option>
+                </select><br><br>
+
+                <input type="submit" value="Apply Filter">
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleHideDisabled() {
+            const url = new URL(window.location.href);
+            const current = url.searchParams.get('hide_disabled') === 'true';
+            url.searchParams.set('hide_disabled', !current);
+            window.location.href = url.toString();
+        }
+
+        function openAddUserPopup() {
+            document.getElementById('add-user-popup').style.display = 'block';
+        }
+
+        function closeAddUserPopup() {
+            document.getElementById('add-user-popup').style.display = 'none';
+        }
+
+        function openFilterPopup(column) {
+            document.getElementById('filter-popup').style.display = 'block';
+        }
+
+        function closeFilterPopup() {
+            document.getElementById('filter-popup').style.display = 'none';
+        }
+
+        function updateUsername() {
+            const role = document.getElementById('user_role').value;
+            const usernameField = document.getElementById('username');
+            const rolesToUsernames = {
+                'admin': 'adminUser',
+                'super_admin': 'superAdminUser',
+                'guest': 'guestUser'
+            };
+            usernameField.value = rolesToUsernames[role] || '';
+        }
+
+        function sortTable(column) {
+            const url = new URL(window.location.href);
+            const currentSort = url.searchParams.get('sort_by') || 'id';
+            if (currentSort === column) {
+                url.searchParams.set('sort_by', '-' + column);
+            } else {
+                url.searchParams.set('sort_by', column);
+            }
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+</html>

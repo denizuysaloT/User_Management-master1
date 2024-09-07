@@ -1,0 +1,34 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "AdminUser",
+      "display_name": "Admin",
+      "phone": "1234567890",
+      "email": "admin@piworks.net",
+      "enabled": true,
+      "user_roles": "admin"
+    },
+    {
+      "id": 2,
+      "username": "TestUser",
+      "display_name": "Tester",
+      "phone": "0987654321",
+      "email": "testuser@piworks.net",
+      "enabled": true,
+      "user_roles": "guest"
+    }
+  ],
+  "new_user_form": {
+    "username": "",
+    "display_name": "",
+    "phone": "",
+    "email": "",
+    "user_roles": [
+      "Guest",
+      "Admin",
+      "SuperAdmin"
+    ],
+    "enabled": false
+  }
+}
